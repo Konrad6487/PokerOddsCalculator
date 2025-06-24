@@ -62,18 +62,21 @@ def checkroyal(sevencard, best5):
         return True, best5
     return False, best5
 def checkstraightflush(sevencard, best5):
-    checker, best5 = checkflush(sevencard, best5)
+    checker, newbest5 = checkflush(sevencard[:], best5[:])
     if checker == True:
-        newchecker, best5 = checkstraight(sevencard, best5)
-        return newchecker, best5
+        newchecker, fin = checkstraight(newbest5[:], [])
+        return newchecker, fin
     return False, best5
 def checkquads(sevencard, best5):
     for i in range(4):
-        if sevencard.count(sevencard[i][0]) == 4:
-            if i > 0:
-                best5 = sevencard[0] + sevencard[i:i+4]
-            else:
-                best5 = sevencard[:5]
+        if sevencard[i][0] == sevencard[i+1][0] and sevencard[i][0] == sevencard[i+2][0] and sevencard[i][0] == sevencard[i+3][0]:
+            quads = sevencard[i:i+4]
+            newsevencard = sevencard[:]
+            newsevencard.remove(newsevencard[i+3])
+            newsevencard.remove(newsevencard[i+2])
+            newsevencard.remove(newsevencard[i+1])
+            newsevencard.remove(newsevencard[i])
+            best5 = quads + [newsevencard[0]]
             return True, best5
     return False, best5
 def checkfullhouse(sevencard, best5):
@@ -85,7 +88,6 @@ def checkfullhouse(sevencard, best5):
             newsevencard.remove(newsevencard[i+1])
             newsevencard.remove(newsevencard[i])
             for j in range(0, len(newsevencard) - 2):
-                print("testing fh ", j, len(newsevencard))
                 if newsevencard[j][0] == newsevencard[j + 1][0]:
                     pair = newsevencard[j:j+2]
                     best5 = trips + pair
@@ -94,24 +96,28 @@ def checkfullhouse(sevencard, best5):
 
 def checkflush(sevencard, best5):
     if sum(1 for card in sevencard if card[1] == 'c') >= 5:
-        for i in range(7):
+        for i in range(len(sevencard)):
             if "c" in sevencard[i]:
                 best5.append(sevencard[i])
+                #print("flush", best5)
         return True, best5
     if sum(1 for card in sevencard if card[1] == 'h') >= 5:
-        for i in range(7):
+        for i in range(len(sevencard)):
             if "h" in sevencard[i]:
                 best5.append(sevencard[i])
+                #print("flush", best5)
         return True, best5
     if sum(1 for card in sevencard if card[1] == 'd') >= 5:
-        for i in range(7):
+        for i in range(len(sevencard)):
             if "d" in sevencard[i]:
                 best5.append(sevencard[i])
+                #print("flush", best5)
         return True, best5
     if sum(1 for card in sevencard if card[1] == 's') >= 5:
-        for i in range(7):
+        for i in range(len(sevencard)):
             if "s" in sevencard[i]:
                 best5.append(sevencard[i])
+                #print("flush", best5)
         return True, best5
     return False, best5
     #MAKE SURE TO SLICES [:5] IN DETERMINE
@@ -125,13 +131,17 @@ def checkstraight(sevencard, best5):
         rankdex = rank.find(curr)
         currdex = rankdex
         j = i + 1
-        while j < len(sevencard) and currdex < rankdex + 4 and currdex < len(rank) - 1:
+        while j < len(sevencard) and currdex < len(rank) - 1:
             if rank[currdex + 1] in sevencard[j]:
                 currdex += 1
-                print("yes")
                 best5.append(sevencard[j])
+            elif currdex == 0:
+                if rank[9] in sevencard[j]:
+                    currdex = 9
+                    best5.append(sevencard[j])
             j += 1
         if len(best5) >= 5:
+            #print("straight", best5)
             return True, best5[:5]
     return False, []
 
@@ -176,7 +186,6 @@ def checkpair(sevencard, best5):
             best5 = firstpair + newsevencard[:3]
             return True, best5
     return False, best5
-
 def determineWinner(playerlist, board):
     sevencard = []
     rank = "AKQJT98765432"
@@ -186,68 +195,67 @@ def determineWinner(playerlist, board):
         best5 = []
         sevencard = player + board
         sevencard = sorted(sevencard, key=lambda card: rank.index(card[0]))
-        checker, best5 = checkroyal(sevencard, best5)
-        print("Players Cards: ", player)
+        checker, best5 = checkstraightflush(sevencard[:], [])
         if checker == True:
-            print("Royal Flush!", best5)
-        else:
-            checker, best5 = checkstraightflush(sevencard, best5)
-            if checker == True:
-                print("Straight Flush!", best5)
+            if best5[1][0] == "K":
+                print("Royal Flush!", best5)
             else:
-                checker, best5 = checkquads(sevencard, best5)
+                print("Straight Flush!", best5)
+        else:
+            checker, best5 = checkquads(sevencard[:], [])
+            if checker == True:
+                print("Quads!", best5)
+            else:
+                checker, best5 = checkfullhouse(sevencard[:], [])
                 if checker == True:
-                    print("Quads!", best5)
+                    print("Full House", best5)
                 else:
-                    checker, best5 = checkfullhouse(sevencard, best5)
+                    checker, best5 = checkflush(sevencard, best5)
                     if checker == True:
-                        print("Full House", best5)
+                        print("Flush!", best5[:5])
                     else:
-                        checker, best5 = checkflush(sevencard, best5)
+                        checker, best5 = checkstraight(sevencard, best5)
                         if checker == True:
-                            print("Flush!", best5[:5])
+                            print("Straight", best5)
                         else:
-                            checker, best5 = checkstraight(sevencard, best5)
+                            checker, best5 = checktrips(sevencard, best5)
                             if checker == True:
-                                print("Straight", best5)
+                                print("Trips!", best5)
                             else:
-                                checker, best5 = checktrips(sevencard, best5)
+                                checker, best5 = checktwopair(sevencard, best5)
                                 if checker == True:
-                                    print("Trips!", best5)
+                                    print("Two Pair!", best5)
                                 else:
-                                    checker, best5 = checktwopair(sevencard, best5)
+                                    checker, best5 = checkpair(sevencard, best5)
                                     if checker == True:
-                                        print("Two Pair!", best5)
+                                        print("Pair!", best5)
                                     else:
-                                        checker, best5 = checkpair(sevencard, best5)
-                                        if checker == True:
-                                            print("Pair!", best5)
-                                        else:
-                                            best5 = sevencard[:5]
-                                            print("High Card!", best5)
+                                        best5 = sevencard[:5]
+                                        print("High Card!", best5)
         
 def main():
-    cardList = ["Ac", "2c", "3c", "4c", "5c", "6c", "7c", "8c", "9c", "Tc", "Jc", "Qc", "Kc",
+    for i in range(10000):
+        cardList = ["Ac", "2c", "3c", "4c", "5c", "6c", "7c", "8c", "9c", "Tc", "Jc", "Qc", "Kc",
             "Ah", "2h", "3h", "4h", "5h", "6h", "7h", "8h", "9h", "Th", "Jh", "Qh", "Kh",
             "Ad", "2d", "3d", "4d", "5d", "6d", "7d", "8d", "9d", "Td", "Jd", "Qd", "Kd",
             "As", "2s", "3s", "4s", "5s", "6s", "7s", "8s", "9s", "Ts", "Js", "Qs", "Ks"]
-    dealtcards = []
-    board = []
-    undealtcards = len(cardList)
-    numPlayers = getPlayers()    
-    playerlist = [[] for _ in range(numPlayers)]
-    mode = 2
-    playerlist, cardList, undealtcards, dealtcards = dealCards(numPlayers, mode, playerlist, cardList, undealtcards, dealtcards)
-    print(undealtcards)
-    cardList, undealtcards, dealtcards = burncard(cardList, undealtcards, dealtcards)
-    cardList, undealtcards, board, dealtcards = flop(cardList, undealtcards, board, dealtcards)
-    cardList, undealtcards, dealtcards = burncard(cardList, undealtcards, dealtcards)
-    cardList, undealtcards, board, dealtcards = turn(cardList, undealtcards, board, dealtcards)
-    cardList, undealtcards, dealtcards = burncard(cardList, undealtcards, dealtcards)
-    cardList, undealtcards, board, dealtcards = turn(cardList, undealtcards, board, dealtcards)
-    print(board)
-    print(playerlist)
-    determineWinner(playerlist, board)
+        dealtcards = []
+        board = []
+        undealtcards = len(cardList)
+        numPlayers = 10  
+        playerlist = [[] for _ in range(numPlayers)]
+        mode = 2
+        playerlist, cardList, undealtcards, dealtcards = dealCards(numPlayers, mode, playerlist, cardList, undealtcards, dealtcards)
+        #print(undealtcards)
+        cardList, undealtcards, dealtcards = burncard(cardList, undealtcards, dealtcards)
+        cardList, undealtcards, board, dealtcards = flop(cardList, undealtcards, board, dealtcards)
+        cardList, undealtcards, dealtcards = burncard(cardList, undealtcards, dealtcards)
+        cardList, undealtcards, board, dealtcards = turn(cardList, undealtcards, board, dealtcards)
+        cardList, undealtcards, dealtcards = burncard(cardList, undealtcards, dealtcards)
+        cardList, undealtcards, board, dealtcards = turn(cardList, undealtcards, board, dealtcards)
+        #print(board)
+        #print(playerlist)
+        determineWinner(playerlist, board)
 
     
 

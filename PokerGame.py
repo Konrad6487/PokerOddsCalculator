@@ -186,11 +186,67 @@ def checkpair(sevencard, best5):
             best5 = firstpair + newsevencard[:3]
             return True, best5
     return False, best5
+def getWinner(handlist):
+    handranking = ["R", "SF", "Q", "FH", "F", "S", "T", "TP", "P", "H"]
+    rank = "AKQJT98765432"
+    tie = []
+    tiev = 0
+    best = None
+    besthand = None
+    for hand in range(len(handlist)):
+        if best == None:
+            best = handranking.index(handlist[hand][0])
+            besthand = handlist[hand]
+            tie = [besthand]
+        elif handranking.index(handlist[hand][0]) < best:
+            best =  handranking.index(handlist[hand][0])
+            besthand = handlist[hand]
+            tie = [besthand]
+        elif handranking.index(handlist[hand][0]) == best:
+            tie.append(handlist[hand])
+    #CHECK TIES
+    #returns index of winning hands
+    if len(tie) == 1:
+        return [handlist.index(tie[0])]
+    else:
+        #IDEA HERE IS TO CHECK THE RANK OF EACH CARD IN EACH BEST 5 AND COMPARE TO SEE IF ITS LESS. BEST HAND IS GONNA BE THE MINIMUM
+        bestlist = []
+        ranklist = []
+        for item in range(len(tie)):
+            bestlist.append(tie[item][1])
+            #testing print bestlist
+        for i in range(len(bestlist)):
+            ranks = ""
+            for j in range(len(bestlist[i])):
+                ranks += bestlist[i][j][0]
+            ranklist.append(ranks)
+        #print(ranklist)
+        sortedrank = sorted(ranklist, key=lambda hand: [rank.index(c) for c in hand])
+        if sortedrank.count(sortedrank[0]) == 1:
+            #print(sortedrank, "just 1")
+            return [handlist.index(tie[ranklist.index(sortedrank[0])])]
+        else:
+            ilist = []
+            for i in range(len(ranklist)):
+                if ranklist[i] == sortedrank[0]:
+                    ilist.append(i)
+            retlist = []
+            for i in range(len(ilist)):
+                #print("chop here i think", ilist)
+                for j in range(len(handlist)):
+                    if handlist[j] == tie[ilist[i]]:
+                        if j not in retlist:
+                            retlist.append(j)
+
+                #retlist.append(handlist.index(tie[ilist[i]]))    
+            return retlist
+
 def determineWinner(playerlist, board):
     sevencard = []
     rank = "AKQJT98765432"
     best5 = []
     checker = False
+    determinewinner = []
     for player in playerlist:
         best5 = []
         sevencard = player + board
@@ -198,43 +254,59 @@ def determineWinner(playerlist, board):
         checker, best5 = checkstraightflush(sevencard[:], [])
         if checker == True:
             if best5[1][0] == "K":
-                print("Royal Flush!", best5)
+                determinewinner.append(["R", best5])
+                #print("Royal Flush!", best5)
             else:
-                print("Straight Flush!", best5)
+                #print("Straight Flush!", best5)
+                determinewinner.append(["SF", best5])
         else:
             checker, best5 = checkquads(sevencard[:], [])
             if checker == True:
-                print("Quads!", best5)
+                #print("Quads!", best5)
+                determinewinner.append(["Q", best5])
             else:
                 checker, best5 = checkfullhouse(sevencard[:], [])
                 if checker == True:
-                    print("Full House", best5)
+                    #print("Full House", best5)
+                    determinewinner.append(["FH", best5])
                 else:
                     checker, best5 = checkflush(sevencard, best5)
                     if checker == True:
-                        print("Flush!", best5[:5])
+                        #print("Flush!", best5[:5])
+                        determinewinner.append(["F", best5])
                     else:
                         checker, best5 = checkstraight(sevencard, best5)
                         if checker == True:
-                            print("Straight", best5)
+                            #print("Straight", best5)
+                            determinewinner.append(["S", best5])
                         else:
                             checker, best5 = checktrips(sevencard, best5)
                             if checker == True:
-                                print("Trips!", best5)
+                                #print("Trips!", best5)
+                                determinewinner.append(["T", best5])
                             else:
                                 checker, best5 = checktwopair(sevencard, best5)
                                 if checker == True:
-                                    print("Two Pair!", best5)
+                                    #print("Two Pair!", best5)
+                                    determinewinner.append(["TP", best5])
                                 else:
                                     checker, best5 = checkpair(sevencard, best5)
                                     if checker == True:
-                                        print("Pair!", best5)
+                                        #print("Pair!", best5)
+                                        determinewinner.append(["P", best5])
                                     else:
                                         best5 = sevencard[:5]
-                                        print("High Card!", best5)
+                                        #print("High Card!", best5)
+                                        determinewinner.append(["H", best5])
+    playerdex = getWinner(determinewinner)
+    for winner in range(len(playerdex)):
+        if len(playerdex) == 1:
+            print("Player", playerdex[winner], "Wins with", determinewinner[playerdex[winner]][1])
+        else:
+            print("Chop! Player", playerdex[winner], "chops pot with", determinewinner[playerdex[winner]][1])
         
 def main():
-    for i in range(10000):
+    for i in range(1000):
         cardList = ["Ac", "2c", "3c", "4c", "5c", "6c", "7c", "8c", "9c", "Tc", "Jc", "Qc", "Kc",
             "Ah", "2h", "3h", "4h", "5h", "6h", "7h", "8h", "9h", "Th", "Jh", "Qh", "Kh",
             "Ad", "2d", "3d", "4d", "5d", "6d", "7d", "8d", "9d", "Td", "Jd", "Qd", "Kd",

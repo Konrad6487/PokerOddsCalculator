@@ -1,5 +1,7 @@
 from poker_game import *
 from check_hands import *
+from itertools import combinations
+
 cardList = ["Ac", "2c", "3c", "4c", "5c", "6c", "7c", "8c", "9c", "Tc", "Jc", "Qc", "Kc",
             "Ah", "2h", "3h", "4h", "5h", "6h", "7h", "8h", "9h", "Th", "Jh", "Qh", "Kh",
             "Ad", "2d", "3d", "4d", "5d", "6d", "7d", "8d", "9d", "Td", "Jd", "Qd", "Kd",
@@ -45,6 +47,7 @@ def selectMode():
     return mode
 
 def everyBoard(cardList):
+    #return list(combinations(cardList, 5))
     boards = []
     board = []
     for i in range(len(cardList)-4):
@@ -61,13 +64,12 @@ def selectFlop(cardList):
         try:
             cardInput = input("Select flop: (Ex: Ac Ad Ah) ")
             cards = cardInput.split(" ")
-            print(cards)
+            #print(cards)
             print(cards[0] in cardList and cards[1] in cardList and cards[2] in cardList)
             if cards[0] in cardList and cards[1] in cardList and cards[2] in cardList:
                 cardList.remove(cards[0])
                 cardList.remove(cards[1])
                 cardList.remove(cards[2])
-                print("what we doin")
                 break
             else:
                 print("Please enter three valid cards")
@@ -79,10 +81,7 @@ def flopBoards(cardList, flop):
     boards = []
     for i in range(len(cardList) - 1):
         for j in range(i + 1, len(cardList)):
-            flop.append(cardList[i])
-            flop.append(cardList[j])
-            boards.append(flop)
-            flop = flop[:3]
+            boards.append(flop + [cardList[i], cardList[j]])
     return boards
 
 def selectTurn(cardList):
@@ -90,7 +89,7 @@ def selectTurn(cardList):
         try:
             cardInput = input("Select 4: (Ex: Ac Ad Ah As) ")
             cards = cardInput.split(" ")
-            print(cards)
+            #print(cards)
             print(cards[0] in cardList and cards[1] in cardList and cards[2] in cardList and cards[3] in cardList)
             if cards[0] in cardList and cards[1] in cardList and cards[2] in cardList and cards[3] in cardList:
                 cardList.remove(cards[0])
@@ -106,10 +105,8 @@ def selectTurn(cardList):
 
 def turnBoards(cardList, turn):
     boards = []
-    for i in range(len(cardList) - 1):
-        turn.append(cardList[i])
-        boards.append(turn)
-        turn = turn[:4]
+    for i in range(len(cardList)):
+        boards.append(turn + [cardList[i]])
     return boards
 
 
@@ -126,7 +123,6 @@ def main():
         playerhand = selectCards(currentcards)
         playerlist.append(playerhand)
     mode = selectMode()
-    print(currentcards)
     if mode == "Pre":
         boards = everyBoard(currentcards)
         combinations = len(boards)
@@ -138,7 +134,10 @@ def main():
         turn = selectTurn(currentcards)
         boards = turnBoards(currentcards, turn)
         combinations = len(boards)
+        #print(boards)
+        #2print(combinations)
     for board in boards:
+        #print(board)
         winners = determineWinner(playerlist, board)
         if len(winners) == 1:
             countwins[str(winners[0])] += 1

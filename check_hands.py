@@ -128,7 +128,7 @@ def checktwopair(sevencard, best5):
     return False, best5
 
 def checkpair(sevencard, best5):
-    for i in range(0, 5):
+    for i in range(0, 6):
         if sevencard[i][0] == sevencard[i + 1][0]:
             firstpair = sevencard[i:i+2]
             newsevencard = sevencard[:]
